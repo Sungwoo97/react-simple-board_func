@@ -1,55 +1,44 @@
-import React, { Component } from 'react'
+import React, { Component, useEffect, useState } from 'react'
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Axios from "axios";
-import { Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
+const View = ()=>{
+  const [ board, setBoard ] = useState(null);
+  const navigate = useNavigate();
+  let { id } = useParams();
+  console.log(id);
 
-export default class View extends Component {
-  state= {
-    title:'',
-    content:'',
-  }
- 
-  datail = () =>{
-    let url = window.location.href;
-    let urlParams = url.split('?')[1];
-    const searchParams = new URLSearchParams(urlParams);
-    let id = searchParams.get('id');
-    console.log(id);
-    //글번호에 맞는 데이터 조회, 글 결과를 title, content반영, 수정모드 true    
+  useEffect(()=>{
     Axios.get(`http://localhost:8000/detail?id=${id}`)
     .then((res) => {
       const {data} = res;  
-      console.log(data);
-      this.setState({
-        title:data[0].BOARD_TITLE,
-        content: data[0].BOARD_CONTENT,
-      })
+      setBoard({
+        title : data[0].BOARD_TITLE,
+        content : data[0].BOARD_CONTENT,
+        image : data[0].IMAGE_PATH 
+      });
     })
-    .catch((e)=> {
+    .catch((err)=> {
       // 에러 핸들링
-      console.log(e);
+      console.log(err);
     });     
-  }
-  //this.prop.isModifyMode에 변동사항이 생기면 detail 함수 실행, componentDidUpdate 함수로 
+  },[id]) 
 
-  componentDidMount() {
-      this.datail();
-  }
+  if(!board) return <div>Loading...</div>
 
-
-  
-  render() {
-      console.log(this.props.title);
-    return (      
-      <div>
-      <h2>{this.state.title}</h2>
+  return(
+    <div>
+      <h2>{board.title}</h2>
       <h3>본문</h3>
-      {this.state.content}
+      {board.content}
       <hr />
-      <Link to="/" className="btn btn-primary">목록</Link>
+      <img src={`http://localhost:8000/${board.image}`} alt="" style={{maxWidth: '300px'}} />
+      <hr />
+      <Button variant='secondary' onClick={()=>{navigate("/")}}>목록</Button>
     </div>
-    )
-  }
+  )
 }
+export default View;
+
